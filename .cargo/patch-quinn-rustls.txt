@@ -1,0 +1,2 @@
+# Enable rustls support for quinn
+quinn = { version = "0.10", features = ["rustls"] }

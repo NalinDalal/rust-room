@@ -4,3 +4,19 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+
+# QUIC transport
+quinn = { version = "0.9", features = ["rustls"] }
+# WebSocket over Tokio
+tokio-tungstenite = "0.21"
+# Tokio async runtime
+tokio = { version = "1.37", features = ["full"] }
+
+rcgen = "0.9"
+rustls = "0.20"
+tokio-util = { version = "0.7", features = ["compat"] }
+futures-util = "0.3"
+
+[[bin]]
+name = "client"
+path = "src/client.rs"
