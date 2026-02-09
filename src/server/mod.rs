@@ -13,13 +13,16 @@ use quinn::{SendStream, RecvStream};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use std::pin::Pin;
 use std::task::{Context, Poll};
-// Wrapper to combine SendStream and RecvStream for WebSocketStream
+
+/// Wrapper to combine a QUIC `SendStream` and `RecvStream` into a
+/// bi-directional stream compatible with a WebSocket raw socket.
 pub struct QuicBiStream {
     send: SendStream,
     recv: RecvStream,
 }
 
 impl QuicBiStream {
+    /// Create a new bi-directional QUIC stream wrapper.
     pub fn new(send: SendStream, recv: RecvStream) -> Self {
         Self { send, recv }
     }
@@ -58,12 +61,17 @@ impl AsyncWrite for QuicBiStream {
         Pin::new(&mut self.send).poll_shutdown(cx)
     }
 }
+
 use tokio::task;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::WebSocketStream;
 
 use crate::room::{Client, ClientId, RoomManager};
 
+/// Load existing cert/key files or generate a self-signed certificate pair.
+///
+/// This helper is convenient for local development; production code
+/// should use properly issued certificates.
 fn load_or_generate_certs() -> (Certificate, PrivateKey) {
     let cert_path = Path::new("cert.der");
     let key_path = Path::new("key.der");
@@ -88,6 +96,10 @@ fn load_or_generate_certs() -> (Certificate, PrivateKey) {
     }
 }
 
+/// Start the QUIC server and accept incoming connections.
+///
+/// Use `cargo run` to start the server locally. The server will listen on
+/// port 5000 by default.
 pub async fn run_server() {
     let (cert, key) = load_or_generate_certs();
     let mut server_config = ServerConfig::with_single_cert(vec![cert], key).expect("bad certs");
@@ -126,6 +138,7 @@ pub async fn run_server() {
     }
 }
 
+/// Handle an accepted WebSocket client over a QUIC bi-directional stream.
 async fn handle_ws_client<S>(ws_stream: WebSocketStream<S>, room_manager: Arc<Mutex<RoomManager>>, client_id: ClientId)
 where
     S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static,
